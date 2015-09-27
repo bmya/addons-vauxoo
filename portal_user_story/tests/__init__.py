@@ -1,5 +1,2 @@
+# coding: utf-8
 from . import test_user_story
-
-fast_suite = [
-	test_user_story
-]

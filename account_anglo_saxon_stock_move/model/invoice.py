@@ -1,3 +1,4 @@
+# coding: utf-8
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
@@ -21,52 +22,20 @@
 #
 ##############################################################################
 
-from openerp.osv import osv
+from openerp.osv import osv, orm
 from openerp import models, api
 
+import logging
 
-class AccountInvoice(osv.osv):
-    _inherit = "account.invoice"
-
-    def reconcile_stock_accrual(self, cr, uid, ids, context=None):
-        aml_obj = self.pool['account.move.line']
-        for inv_brw in self.browse(cr, uid, ids, context=context):
-            for ail_brw in inv_brw.invoice_line:
-                res = {}
-                if ail_brw.move_id:
-                    for brw in ail_brw.move_id.aml_ids:
-                        if brw.account_id.reconcile:
-                            if res.get(brw.account_id.id, False):
-                                res[brw.account_id.id]['debit'] += brw.debit
-                                res[brw.account_id.id]['credit'] += brw.credit
-                                res[brw.account_id.id]['ids'].append(brw.id)
-                            else:
-                                res[brw.account_id.id] = {
-                                    'debit': brw.debit,
-                                    'credit': brw.credit,
-                                    'ids': [brw.id],
-                                }
-                for key, val in res.iteritems():
-                    if val['debit'] == val['credit']:
-                        aml_obj.reconcile(cr, uid, val['ids'])
-                    elif len(val['ids']) > 1:
-                        aml_obj.reconcile_partial(cr, uid, val['ids'])
-
-        return True
-
-    def invoice_validate(self, cr, uid, ids, context=None):
-        res = super(AccountInvoice, self).invoice_validate(
-            cr, uid, ids, context=context)
-        self.reconcile_stock_accrual(cr, uid, ids, context=context)
-        return res
+_logger = logging.getLogger(__name__)
 
 
-class account_invoice(models.Model):
+class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
     @api.model
     def line_get_convert(self, line, part, date):
-        res = super(account_invoice, self).line_get_convert(line, part, date)
+        res = super(AccountInvoice, self).line_get_convert(line, part, date)
         if line.get('sm_id', False):
             res['sm_id'] = line['sm_id']
         return res
@@ -86,10 +55,71 @@ class account_invoice(models.Model):
         if aml_ids:
             aml_obj._remove_move_reconcile(aml_ids)
 
-        return super(account_invoice, self).action_cancel()
+        return super(AccountInvoice, self).action_cancel()
+
+    def reconcile_stock_accrual(self, cr, uid, ids, context=None):
+        context = dict(context or {})
+        ids = isinstance(ids, (int, long)) and [ids] or ids
+        aml_obj = self.pool['account.move.line']
+        amr_obj = self.pool['account.move.reconcile']
+        for inv_brw in self.browse(cr, uid, ids, context=context):
+            for ail_brw in inv_brw.invoice_line:
+                ail_brw.refresh()
+                if not ail_brw.move_id:
+                    continue
+                if ail_brw.move_id.product_id != ail_brw.product_id:
+                    continue
+
+                res = {}
+                amr_ids = [
+                    aml_brw1.reconcile_id.id or
+                    aml_brw1.reconcile_partial_id.id
+                    for aml_brw1 in ail_brw.move_id.aml_ids
+                    if aml_brw1.reconcile_id or aml_brw1.reconcile_partial_id
+                    ]
+
+                if amr_ids:
+                    amr_ids = list(set(amr_ids))
+                    amr_obj.unlink(cr, uid, amr_ids, context=context)
+
+                ail_brw.refresh()
+                aml_brws = [
+                    aml_brw
+                    for aml_brw in ail_brw.move_id.aml_ids
+                    if aml_brw.product_id and
+                    aml_brw.account_id.reconcile and
+                    aml_brw.product_id == ail_brw.product_id
+                    ]
+
+                for brw in aml_brws:
+                    if res.get(brw.account_id.id, False):
+                        res[brw.account_id.id].append(brw.id)
+                    else:
+                        res[brw.account_id.id] = [brw.id]
+
+                for val in res.values():
+                    if not len(val) > 1:
+                        continue
+                    try:
+                        aml_obj.reconcile_partial(cr, uid, val,
+                                                  context=context)
+                    except orm.except_orm:
+                        message = (
+                            "Reconciliation was not possible with "
+                            "Journal Items [{values}]".format(
+                                values=", ".join([str(idx) for idx in val])))
+                        _logger.exception(message)
+
+        return True
+
+    def invoice_validate(self, cr, uid, ids, context=None):
+        res = super(AccountInvoice, self).invoice_validate(
+            cr, uid, ids, context=context)
+        self.reconcile_stock_accrual(cr, uid, ids, context=context)
+        return res
 
 
-class account_invoice_line(osv.osv):
+class AccountInvoiceLine(osv.osv):
     _inherit = "account.invoice.line"
 
     def _anglo_saxon_stock_move_lines(self, cr, uid, res, ttype='customer',
@@ -131,7 +161,7 @@ class account_invoice_line(osv.osv):
         return rex
 
     def move_line_get(self, cr, uid, invoice_id, context=None):
-        res = super(account_invoice_line,
+        res = super(AccountInvoiceLine,
                     self).move_line_get(cr, uid, invoice_id, context=context)
         inv = self.pool.get('account.invoice').browse(
             cr, uid, invoice_id, context=context)
@@ -142,4 +172,3 @@ class account_invoice_line(osv.osv):
             res = self._anglo_saxon_stock_move_lines(
                 cr, uid, res, ttype='supplier', context=context)
         return res
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

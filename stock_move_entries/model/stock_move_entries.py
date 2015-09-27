@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# coding: utf-8
 ###########################################################################
 #    Module Writen to OpenERP, Open Source Management Solution
 #
@@ -46,7 +46,8 @@ class StockMove(osv.Model):
 
     _columns = {
         'aml_ids': fields.one2many(
-            'account.move.line', 'sm_id', 'Account move Lines'),
+            'account.move.line', 'sm_id', 'Account move Lines',
+            domain=[('account_id.reconcile', '=', True)]),
     }
 
 

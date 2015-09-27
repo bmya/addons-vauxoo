@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+# coding: utf-8
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
@@ -27,7 +27,7 @@ from openerp.osv import osv
 from openerp.osv import fields
 
 
-class product_template(osv.osv):
+class ProductTemplate(osv.osv):
     _inherit = 'product.template'
 
     def _get_purchased(self, cr, uid, ids, field_names, arg=None,
@@ -48,23 +48,26 @@ class product_template(osv.osv):
         pid = cr.fetchall()
         for pr in pid:
             pids_t.append(pr[0])
-        pids = '(%s)' % ', '.join(map(repr, tuple(pids_t)))
-        cr.execute("\
-            SELECT product_tmpl_id\
-            FROM product_product\
-            WHERE id in (\
-            select product_id\
-            from sale_order_line\
-            where order_id in (select order_id\
+        pids = '(%s)' % ', '.join(map  # pylint: disable=W0141,W0110
+                                  (repr,
+                                   tuple(pids_t)))
+        if pids:
+            cr.execute("\
+                SELECT product_tmpl_id\
+                FROM product_product\
+                WHERE id in (\
+                select product_id\
+                from sale_order_line\
+                where order_id in (select order_id\
                                from sale_order_line\
                                where product_id in {0}\
                                ) and product_id not in {0}\
-            group by product_id)\
-            GROUP BY product_tmpl_id;\
+                group by product_id)\
+                GROUP BY product_tmpl_id;\
             ".format(pids))
-        res = cr.fetchall()
-        for ret in res:
-            result[ids[0]].append(ret[0])
+            res = cr.fetchall()
+            for ret in res:
+                result[ids[0]].append(ret[0])
         return result
 
     _columns = {

@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# coding: utf-8
 ###############################################################################
 #    Module Writen to OpenERP, Open Source Management Solution
 #    Copyright (C) OpenERP Venezuela (<http://www.vauxoo.com>).
@@ -27,7 +27,7 @@ from openerp import fields, models, api
 from openerp.tools.translate import _
 
 
-class res_partner(models.Model):
+class ResPartner(models.Model):
 
     _inherit = 'res.partner'
 
@@ -36,9 +36,9 @@ class res_partner(models.Model):
         """
         @return a list of tuples with the selection field options.
         """
-        return [('undefine', 'Undefine'),
-                ('international', 'International'),
-                ('national', 'National')]
+        return [('undefine', _('Undefine')),
+                ('international', _('International')),
+                ('national', _('National'))]
 
     @api.depends('country_id')
     def _get_partner_scope(self):

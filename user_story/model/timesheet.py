@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
@@ -23,10 +23,12 @@ from openerp.osv import fields, osv
 from openerp.tools.sql import drop_view_if_exists
 
 
-class hr_timesheet(osv.Model):
+class HrTimesheet(osv.Model):
     _inherit = "hr.analytic.timesheet"
 
-    def _get_invoiceables_hours(self, cr, uid, ids, args, fields, context=None):  # pylint: disable=W0621
+    def _get_invoiceables_hours(
+            self, cr, uid,
+            ids, args, fields, context=None):  # pylint: disable=W0621
         context = context or {}
         res = {}
         for time_brw in self.browse(cr, uid, ids, context=context):
@@ -34,11 +36,13 @@ class hr_timesheet(osv.Model):
             if time_brw.to_invoice:
                 hours = time_brw.unit_amount - \
                     (time_brw.unit_amount *
-                    (time_brw.to_invoice.factor / 100))
+                     (time_brw.to_invoice.factor / 100))
             res.update({time_brw.id: hours})
         return res
 
-    def _get_user_story(self, cr, uid, ids, args, fields, context=None):  # pylint: disable=W0621
+    def _get_user_story(
+            self, cr, uid,
+            ids, args, fields, context=None):  # pylint: disable=W0621
         context = context or {}
         res = {}
         task_obj = self.pool.get('project.task')
@@ -102,12 +106,14 @@ class hr_timesheet(osv.Model):
     }
 
 
-class custom_timesheet(osv.Model):
+class CustomTimesheet(osv.Model):
     _name = "custom.timesheet"
     _order = "date desc"
     _auto = False
 
-    def _get_invoiceables_hours(self, cr, uid, ids, args, fields, context=None):  # pylint: disable=W0621
+    def _get_invoiceables_hours(
+            self, cr, uid,
+            ids, args, fields, context=None):  # pylint: disable=W0621
         context = context or {}
         res = {}
         for time_brw in self.browse(cr, uid, ids, context=context):
@@ -115,7 +121,7 @@ class custom_timesheet(osv.Model):
             if time_brw.to_invoice:
                 hours = time_brw.unit_amount - \
                     (time_brw.unit_amount *
-                    (time_brw.to_invoice.factor / 100))
+                     (time_brw.to_invoice.factor / 100))
             res.update({time_brw.id: hours})
         return res
 
@@ -131,7 +137,8 @@ class custom_timesheet(osv.Model):
         'userstory_id': fields.many2one('user.story', 'User Story',
                                         help='Code of User Story related '
                                         'to this analytic'),
-        'name': fields.char('Description', 264, help='Description of the work'),
+        'name': fields.char(
+            'Description', 264, help='Description of the work'),
 
         'unit_amount': fields.float('Duration', readonly=True),
         'timesheet_id': fields.many2one('hr.analytic.timesheet',
@@ -164,9 +171,12 @@ class custom_timesheet(osv.Model):
                       work.hours AS unit_amount,
                       tsheet.id AS timesheet_id
                 FROM project_task_work AS work
-                LEFT JOIN hr_analytic_timesheet AS tsheet ON tsheet.id = work.hr_analytic_timesheet_id
+                LEFT JOIN hr_analytic_timesheet AS tsheet
+                   ON tsheet.id = work.hr_analytic_timesheet_id
                 INNER JOIN project_task AS task ON task.id = work.task_id
                 INNER JOIN user_story AS us ON us.id = task.userstory_id
-                INNER JOIN project_project AS project ON project.id = task.project_id
-                INNER JOIN account_analytic_account AS analytic ON analytic.id = project.analytic_account_id
+                INNER JOIN project_project AS project
+                   ON project.id = task.project_id
+                INNER JOIN account_analytic_account AS analytic
+                   ON analytic.id = project.analytic_account_id
         )''')
