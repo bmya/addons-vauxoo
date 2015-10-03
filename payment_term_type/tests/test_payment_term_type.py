@@ -27,17 +27,16 @@ class TestPaymentTermType(TransactionCase):
         This Tests validate the payment type dependig
         payment terms line to compute
     """
+
     def setUp(self):
         super(TestPaymentTermType, self).setUp()
-        self.payment_term_cash = self.env.ref(
-            'payment_term_type.payment_term_cash')
-        self.payment_term_credit = self.env.ref(
-            'payment_term_type.payment_term_credit')
 
     def test_payment_term_type_cash(self):
         """
             This test validate payment type in cash
         """
+        self.payment_term_cash = self.env.ref(
+            'payment_term_type.payment_term_cash')
         self.assertEqual(
             self.payment_term_cash.payment_type, 'cash',
             'Payment term should be in cash')
@@ -46,6 +45,8 @@ class TestPaymentTermType(TransactionCase):
         """
             This test validate payment type in credit
         """
+        self.payment_term_credit = self.env.ref(
+            'payment_term_type.payment_term_credit')
         self.assertEqual(
             self.payment_term_credit.payment_type, 'credit',
             'Payment term should be in credit')
