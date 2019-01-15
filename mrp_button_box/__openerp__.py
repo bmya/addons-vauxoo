@@ -23,7 +23,7 @@
 ###############################################################################
 {
     "name": "MRP Button Box",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "",
     "website": "http://www.openerp.com.ve",
@@ -41,6 +41,6 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

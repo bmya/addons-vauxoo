@@ -1,19 +1,42 @@
 # coding: utf-8
-from openerp.addons.website_sale.controllers.main import website_sale
-from openerp.http import request
+##############################################################################
+#
+#    OpenERP, Open Source Management Solution
+#    Copyright (C) 2014-Today OpenERP SA (<http://www.openerp.com>).
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+from openerp.addons.web.http import Controller, route, request
+from openerp import SUPERUSER_ID
 
 
-class WebsiteSaleInh(website_sale):
+class DownloadableBrochure(Controller):
 
-    def get_attribute_value_ids(self, product):
-        cr, uid, context, pool = request.cr, request.uid, request.context,\
-            request.registry
-        product_obj = pool['product.product']
-        res = super(WebsiteSaleInh, self).get_attribute_value_ids(product)
-        new_res = []
-        for ret in res:
-            stock_state = product_obj.browse(cr, uid, [ret[0]],
-                                             context)[0].stock_state
-            ret.append(int(stock_state))
-            new_res.append(ret)
-        return new_res
+    @route([
+        '/downloadable/productbrochure/<docids>',
+    ], type='http', auth='public', website=True)
+    def report_routes(self, docids=None, **data):
+        report_obj = request.registry['report']
+        cr, context = request.cr, request.context
+
+        if docids:
+            docids = [int(i) for i in docids.split(',')]
+        reportname = 'website_variants_extra.pprintable'
+        pdf = report_obj.get_pdf(cr, SUPERUSER_ID, docids, reportname,
+                                 context=context)
+        pdfhttpheaders = [
+            ('Content-Type', 'application/pdf'),
+            ('Content-Length', len(pdf))]
+        return request.make_response(pdf, headers=pdfhttpheaders)

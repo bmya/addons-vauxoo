@@ -25,15 +25,17 @@
 ##############################################################################
 {
     "name": "Stock Location Code",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "Generic Modules/Account",
     "website": "http://www.vauxoo.com/",
-    "license": "",
+    "license": "AGPL-3",
     "depends": [
         "stock"
     ],
-    "demo": [],
+    "demo": [
+        'demo/stock_location_demo.xml',
+    ],
     "data": [
         "view/stock_view.xml",
     ],
@@ -41,6 +43,6 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

@@ -25,7 +25,7 @@
 ##############################################################################
 {
     "name": "Add many followers in many task or project",
-    "version": "1.7",
+    "version": "8.0.0.1.7",
     "author": "Vauxoo",
     "category": "Task and Project",
     "website": "http://www.vauxoo.com/",
@@ -43,7 +43,7 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
     'images': ['images/main_screenshot.png'],
 }

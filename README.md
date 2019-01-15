@@ -1,5 +1,5 @@
 [![Build Status](http://runbot.odoo.com/logo.png)](http://runbot.vauxoo.com/runbot/)
-[![Build Status](https://travis-ci.org/Vauxoo/addons-vauxoo.svg)](https://travis-ci.org/Vauxoo/addons-vauxoo)
+[![Build Status](https://travis-ci.org/Vauxoo/addons-vauxoo.svg?branch=9.0)](https://travis-ci.org/Vauxoo/addons-vauxoo)
 
 Vauxoo modules for Odoo
 ===
@@ -26,15 +26,9 @@ Python Libraries which we depend from.
 
 Read the requirements.txt file for more information.
 
-Paid support and warranties.
----
-
-Are you planning to use this modules in a production environment that can hire
-some work from the team behind this work?
-
 Do you want to contribute?
 ---
 
-[Read the way](https://github.com/Vauxoo/addons-vauxoo/blob/8.0/CONTRIBUTING.md).
+[Read the way](https://github.com/Vauxoo/addons-vauxoo/blob/9.0/CONTRIBUTING.md).
 
 #Better go with [Vauxoo](http://vauxoo.com)

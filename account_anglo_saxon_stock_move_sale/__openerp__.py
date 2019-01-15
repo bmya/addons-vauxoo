@@ -23,13 +23,14 @@
 ###############################################################################
 {
     "name": "Account Anglo-Saxon Stock Move Sale",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "",
     "website": "http://www.vauxoo.com/",
     "license": "",
     "depends": [
         "account_anglo_saxon_stock_move",
+        "sale",
     ],
     "demo": [],
     "data": [
@@ -39,6 +40,6 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

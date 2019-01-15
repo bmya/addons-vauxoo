@@ -1,11 +1,11 @@
 # coding: utf-8
 from openerp.addons.account_voucher_tax.tests.common import TestTaxCommon
+from openerp.exceptions import Warning as UserError
 import time
 
 
 class TestPaymentTax(TestTaxCommon):
-    """
-        These Tests were made based on this document,
+    """These Tests were made based on this document,
         https://docs.google.com/a/vauxoo.com/spreadsheets/d/1O82bBb-mySbpH7SiY1KQILsIIRMgcO5E0ddNuCGC0N8/edit#gid=0
         to test the successful creation of taxes efectivamete pagado / cobrado
         of supplier in payments by bank statement
@@ -15,8 +15,7 @@ class TestPaymentTax(TestTaxCommon):
         super(TestPaymentTax, self).setUp()
 
     def test_iva_16_supplier(self):
-        """
-            Tests Supplier with tax 16% and two payments
+        """Tests Supplier with tax 16% and two payments
         """
         cr, uid = self.cr, self.uid
         invoice_id = self.account_invoice_model.create(cr, uid, {
@@ -88,8 +87,7 @@ class TestPaymentTax(TestTaxCommon):
                 continue
 
     def test_iva_16_ret_supplier(self):
-        """
-            Tests Supplier with two taxes IVA 16%
+        """Tests Supplier with two taxes IVA 16%
             and Retention 10.67% with one payment
         """
         cr, uid = self.cr, self.uid
@@ -173,8 +171,7 @@ class TestPaymentTax(TestTaxCommon):
         self.assertEquals(amount_iva16, 16)
 
     def test_iva_16_currency_supplier(self):
-        """
-            Tests Supplier with currency USD and tax 16% with two payments
+        """Tests Supplier with currency USD and tax 16% with two payments
         """
         cr, uid = self.cr, self.uid
         invoice_id = self.account_invoice_model.create(cr, uid, {
@@ -271,8 +268,7 @@ class TestPaymentTax(TestTaxCommon):
         self.assertEquals(checked_line, 4)
 
     def test_iva_16_currency_supplier_almost_complete(self):
-        """
-            Tests Supplier with currency USD and tax 16% and two payments
+        """Tests Supplier with currency USD and tax 16% and two payments
             First payment almost complete and exchange rate
                 greater then invoice
             Second payment with exchange rate same that invoice
@@ -372,8 +368,7 @@ class TestPaymentTax(TestTaxCommon):
         self.assertEquals(checked_line, 4)
 
     def test_iva_16_supplier_difference_currency_usd(self):
-        """
-            Tests Supplier with invoice currency USD and tax 16% with
+        """Tests Supplier with invoice currency USD and tax 16% with
             payment with currency of company EUR
             and specific rate in statement line
         """
@@ -452,8 +447,7 @@ class TestPaymentTax(TestTaxCommon):
         self.assertEquals(checked_line, 4)
 
     def test_iva_16_supplier_difference_currency_eur(self):
-        """
-            Tests Supplier with invoice currency company EUR and tax 16% with
+        """Tests Supplier with invoice currency company EUR and tax 16% with
             payment with currency USD
             and specific rate in statement line
         """
@@ -516,3 +510,57 @@ class TestPaymentTax(TestTaxCommon):
                 checked_line += 1
                 continue
         self.assertEquals(checked_line, 2)
+
+    def test_validate_rounding_high(self):
+        """Tests to validate when amount rounding is too high"""
+        cr, uid = self.cr, self.uid
+        invoice_id = self.account_invoice_model.create(cr, uid, {
+            'partner_id': self.partner_agrolait_id,
+            'journal_id': self.invoice_supplier_journal_id,
+            'reference_type': 'none',
+            'name': 'invoice to supplier',
+            'account_id': self.account_payable_id,
+            'type': 'in_invoice',
+            'date_invoice': time.strftime('%Y') + '-06-01',
+            'currency_id': self.currency_usd_id,
+            'check_total': 100
+        })
+        self.account_invoice_line_model.create(cr, uid, {
+            'product_id': self.product_id,
+            'quantity': 1,
+            'price_unit': 100,
+            'invoice_id': invoice_id,
+            'name': 'product that cost 100'})
+
+        # validate invoice
+        self.registry('account.invoice').signal_workflow(
+            cr, uid, [invoice_id], 'invoice_open')
+        invoice_record = self.account_invoice_model.browse(
+            cr, uid, [invoice_id])
+
+        # we search aml with account payable
+        for line_invoice in invoice_record.move_id.line_id:
+            if line_invoice.account_id.id == self.account_payable_id:
+                line_id = line_invoice
+                break
+        bank_stmt_id = self.acc_bank_stmt_model.create(cr, uid, {
+            'journal_id': self.bank_journal_usd_id,
+            'date': time.strftime('%Y') + '-07-01',
+        })
+
+        bank_stmt_line_id = self.acc_bank_stmt_line_model.create(cr, uid, {
+            'name': 'payment',
+            'statement_id': bank_stmt_id,
+            'partner_id': self.partner_agrolait_id,
+            'amount': -100,
+            'date': time.strftime('%Y') + '-07-01'})
+
+        val = {
+            'debit': 1454.45,
+            'counterpart_move_line_id': line_id.id,
+            'name': line_id.name}
+
+        msg = 'Rounding amount is too high'
+        with self.assertRaisesRegexp(UserError, msg):
+            self.acc_bank_stmt_line_model.process_reconciliation(
+                cr, uid, bank_stmt_line_id, [val])

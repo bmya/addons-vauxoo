@@ -26,7 +26,7 @@
 
 {
     "name": "Stock hide set zero button",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "",
     "website": "http://www.vauxoo.com/",
@@ -40,5 +40,5 @@
         "views/stock_view.xml",
         "security/stock_hide_set_zero_button.xml",
     ],
-    "installable": True,
+    "installable": False,
 }

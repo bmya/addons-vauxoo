@@ -20,7 +20,74 @@
 ##############################################################################
 
 
-from openerp import models,  _
+from openerp import models, _
+
+
+class ProductProduct(models.Model):
+    _inherit = 'product.product'
+
+    def fetch_product_bom_states(
+            self, cr, uid, ids, vals=None, state=None, bom_id=None,
+            context=None):
+        vals = dict(vals or {})
+        context = dict(context or {})
+        ids = isinstance(ids, (int, long)) and ids or ids[0]
+
+        def _bom_find(prod_id):
+            if model == 'product.product':
+                # if not look for template
+                bom_id = bom_obj._bom_find(
+                    cr, uid, product_id=prod_id, context=context)
+                if bom_id:
+                    return bom_id
+                prod_id = prod_obj.browse(
+                    cr, uid, prod_id, context=context).product_tmpl_id.id
+            return bom_obj._bom_find(
+                cr, uid, product_tmpl_id=prod_id, context=context)
+
+        bom_obj = self.pool.get('mrp.bom')
+        model = 'product.product'
+        prod_obj = self.pool.get('product.product')
+
+        if ids not in vals:
+            vals[ids] = prod_obj.browse(cr, uid, ids, context=context).state
+        if state is not None and vals[ids] == state:
+            return True
+
+        bom_id = bom_id or _bom_find(ids)
+        if not bom_id:
+            return False
+        bom = bom_obj.browse(cr, uid, bom_id, context=context)
+
+        # Call compute_price on these subproducts
+        prod_set = set([x.product_id.id for x in bom.bom_line_ids])
+        res = False
+        for prod_id in prod_set:
+            if self.fetch_product_bom_states(
+                    cr, uid, prod_id, vals=vals, state=state, context=context):
+                res = True
+                break
+
+        return res
+
+    def get_product_bom_state(
+            self, cr, uid, ids, has_state=None, context=None):
+        context = dict(context or {})
+        ids = isinstance(ids, (int, long)) and [ids] or ids
+        res = {}
+        vals = {}
+
+        for prod_id in ids:
+            res[prod_id] = self.fetch_product_bom_states(
+                cr, uid, prod_id, vals=vals, state=has_state, context=context)
+
+        if has_state is not None:
+            return res
+
+        rex = {}
+        for prod_id in ids:
+            rex[prod_id] = vals[prod_id]
+        return res
 
 
 class ProductTemplate(models.Model):
@@ -32,6 +99,7 @@ class ProductTemplate(models.Model):
             .get_product_accounts(cr, uid, product_id,
                                   context=context)
         product_brw = self.browse(cr, uid, product_id)
+        # noqa
         diff_acc_id = product_brw.property_account_creditor_price_difference and \
             product_brw.property_account_creditor_price_difference.id or \
             product_brw.categ_id.property_account_creditor_price_difference_categ and \
@@ -40,64 +108,6 @@ class ProductTemplate(models.Model):
 
         res.update({'property_difference_price_account_id': diff_acc_id})
         return res
-
-    def compute_price(self, cr, uid, product_ids, template_ids=False,
-                      recursive=False, test=False, real_time_accounting=False,
-                      context=None):
-        '''
-        Will return test dict when the test = False
-        Multiple ids at once?
-        testdict is used to inform the user about the changes to be made
-        '''
-        testdict = {}
-        real_time = real_time_accounting
-        if product_ids:
-            ids = product_ids
-            model = 'product.product'
-        else:
-            ids = template_ids
-            model = 'product.template'
-        for prod_id in ids:
-            bom_obj = self.pool.get('mrp.bom')
-            if model == 'product.product':
-                bom_id = bom_obj._bom_find(cr, uid,
-                                           product_id=prod_id, context=context)
-            else:
-                bom_id = bom_obj._bom_find(cr, uid, product_tmpl_id=prod_id,
-                                           context=context)
-            if bom_id:
-                # In recursive mode, it will first compute the prices of child
-                # boms
-                if recursive:
-                    # Search the products that are components of this bom of
-                    # prod_id
-                    bom = bom_obj.browse(cr, uid, bom_id, context=context)
-
-                    # Call compute_price on these subproducts
-                    prod_set = set([x.product_id.id for x in bom.bom_line_ids])
-                    res = self.\
-                        compute_price(cr, uid, product_ids=list(prod_set),
-                                      template_ids=[], recursive=recursive,
-                                      test=test,
-                                      real_time_accounting=real_time,
-                                      context=context)
-                    if test:
-                        testdict.update(res)
-                # Use calc price to calculate and put the price on the product
-                # of the BoM if necessary
-                price = self._calc_price(cr, uid,
-                                         bom_obj.browse(cr, uid,
-                                                        bom_id,
-                                                        context=context),
-                                         test=test,
-                                         real_time_accounting=real_time,
-                                         context=context)
-                if test:
-                    testdict.update({prod_id: price})
-        if test:
-            return testdict
-        else:
-            return True
 
     def do_change_standard_price(self, cr, uid, ids, new_price, context=None):
         """ Changes the Standard Price of Product and creates an account move

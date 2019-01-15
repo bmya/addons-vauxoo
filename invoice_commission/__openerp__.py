@@ -1,7 +1,7 @@
 # coding: utf-8
 {
     "name": "Account invoice Update",
-    "version": "0.6",
+    "version": "8.0.0.0.6",
     "author": "Vauxoo",
     "category": "Generic Modules/Accounting",
     "website": "http://vauxoo.com",
@@ -18,6 +18,6 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

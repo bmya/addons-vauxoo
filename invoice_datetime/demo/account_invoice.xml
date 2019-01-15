@@ -1,0 +1,96 @@
+<?xml version="1.0" ?>
+<odoo>
+    <data noupdate="1">
+        <!-- this demo data is the same found in odoo-9.0/addons/account/test/account_minimal_test.xml -->
+        <record id="a_pay" model="account.account">
+            <field name="code">X1111</field>
+            <field name="name">Creditors - (test)</field>
+            <field eval="True" name="reconcile"/>
+            <field name="user_type_id" ref="account.data_account_type_payable"/>
+        </record>
+        <record id="a_expense" model="account.account">
+            <field name="code">X2120</field>
+            <field name="name">Expenses (datetime invoices test)</field>
+            <field name="user_type_id" ref="account.data_account_type_expenses"/>
+            <field name="tag_ids" eval="[(6,0,[ref('account.account_tag_operating')])]"/>
+        </record>
+
+        <record id="a_recv" model="account.account">
+            <field name="code">X1012</field>
+            <field name="name">Debtors - (test)</field>
+            <field eval="True" name="reconcile"/>
+            <field name="user_type_id" ref="account.data_account_type_receivable"/>
+        </record>
+        <record id="a_pay" model="account.account">
+            <field name="code">X1111</field>
+            <field name="name">Creditors - (test)</field>
+            <field eval="True" name="reconcile"/>
+            <field name="user_type_id" ref="account.data_account_type_payable"/>
+        </record>
+
+        <!-- Properties -->
+        <record forcecreate="True" id="property_account_receivable_id" model="ir.property">
+            <field name="name">property_account_receivable_id</field>
+            <field name="fields_id" search="[('model','=','res.partner'),('name','=','property_account_receivable_id')]"/>
+            <field eval="'account.account,'+str(a_recv)" name="value"/>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+        <record forcecreate="True" id="property_account_payable_id" model="ir.property">
+            <field name="name">property_account_payable_id</field>
+            <field name="fields_id" search="[('model','=','res.partner'),('name','=','property_account_payable_id')]"/>
+            <field eval="'account.account,'+str(a_pay)" name="value"/>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+        <record forcecreate="True" id="property_account_position_id" model="ir.property">
+            <field name="name">property_account_position_id</field>
+            <field name="fields_id" search="[('model','=','res.partner'),('name','=','property_account_position_id')]"/>
+            <field eval="False" name="value"/>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+
+        <record id="expenses_journal" model="account.journal">
+            <field name="name">Vendor Bills - Test</field>
+            <field name="code">TEXJ</field>
+            <field name="type">purchase</field>
+            <field name="default_debit_account_id" ref="a_expense"/>
+            <field name="default_credit_account_id" ref="a_expense"/>
+            <field name="refund_sequence" eval="True"/>
+        </record>
+        <record id="invoice_1" model="account.invoice">
+            <field name="date_due" eval="time.strftime('%Y')+'-01-30'"/>
+            <field name="journal_id" ref="expenses_journal"/>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="user_id" ref="base.user_demo"/>
+            <field name="reference_type">none</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="state">draft</field>
+            <field name="type">in_invoice</field>
+            <field name="account_id" ref="a_pay"/>
+            <field eval="0" name="reconciled"/>
+            <field name="date_invoice" eval="time.strftime('%Y')+'-01-01'"/>
+            <field eval="14.0" name="amount_untaxed"/>
+            <field eval="14.0" name="amount_total"/>
+            <field name="partner_id" ref="base.res_partner_1"/>
+        </record>
+        <record id="product_product_39" model="product.product">
+            <field name="name">Toner Cartridge</field>
+            <field name="categ_id" ref="product.product_category_5"/>
+            <field name="standard_price">66.0</field>
+            <field name="list_price">70.0</field>
+            <field name="type">consu</field>
+            <field name="uom_id" ref="product.product_uom_unit"/>
+            <field name="uom_po_id" ref="product.product_uom_unit"/>
+            <field name="default_code">TONER</field>
+        </record>
+        <record id="invoice_1_line_1" model="account.invoice.line">
+            <field name="invoice_id" ref="invoice_1"/>
+            <field name="account_id" ref="a_expense"/>
+            <field name="price_unit" eval="10.0" />
+            <field name="price_subtotal" eval="10.0" />
+            <field name="company_id" ref="base.main_company"/>
+            <field name="product_id" ref="product_product_39"/>
+            <field name="quantity" eval="1.0" />
+            <field name="name">Toner Cartridge</field>
+        </record>
+    </data>
+</odoo>

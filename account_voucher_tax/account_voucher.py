@@ -176,8 +176,8 @@ class AccountVoucher(osv.Model):
                     if current_currency != line.currency_id.id:
                         statement_currency_line = line.currency_id.id
 
-                    if (current_currency != company_currency
-                            or statement_currency_line):
+                    if (current_currency != company_currency or
+                            statement_currency_line):
                         amount_tax_currency += cur_obj.compute(
                             cr, uid,
                             statement_currency_line or current_currency,
@@ -231,8 +231,7 @@ class AccountVoucher(osv.Model):
             self, cr, uid, voucher, line_total, move_id, name,
             company_currency, current_currency, move_reconcile_id,
             context=None):
-        '''
-        Set a dict to be use to create the writeoff move line.
+        """Set a dict to be use to create the writeoff move line.
 
         :param voucher_id: Id of voucher what we are creating account_move.
         :param line_total: Amount remaining to be allocated on lines.
@@ -245,7 +244,7 @@ class AccountVoucher(osv.Model):
         :return: mapping between fieldname and value of account move line to
             create
         :rtype: dict
-        '''
+        """
         currency_obj = self.pool.get('res.currency')
         move_line_obj = self.pool.get('account.move.line')
         move_line = {}
@@ -760,7 +759,7 @@ class AccountVoucherLineTax(osv.Model):
             store=True, digits=(12, 6)),
         # 'balance_tax':fields.float('Balance Import Tax'),
         'diff_amount_tax': fields.float(
-            'Difference', digits_compute= dp.get_precision('Account')),
+            'Difference', digits_compute=dp.get_precision('Account')),
         'diff_account_id': fields.many2one('account.account', 'Account Diff'),
         'voucher_line_id': fields.many2one(
             'account.voucher.line', 'Voucher Line'),

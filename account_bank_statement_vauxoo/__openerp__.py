@@ -21,7 +21,7 @@
 ##############################################################################
 {
     "name": "Fixes and Imrpovements to Bank Statement management",
-    "version": "0.6",
+    "version": "8.0.0.0.6",
     "author": "Vauxoo",
     "category": "Accounting & Finance",
     "website": "http://vauxoo.com",
@@ -42,7 +42,7 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
     "external_dependencies": {
         "python": ["xlrd"],

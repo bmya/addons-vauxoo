@@ -24,7 +24,7 @@
 ###########################################################################
 {
     "name": "Issue Management enhancement.",
-    "version": "0.6",
+    "version": "8.0.0.0.6",
     "author": "Vauxoo",
     "category": "Generic Modules",
     "website": "http://vauxoo.com",
@@ -44,6 +44,6 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

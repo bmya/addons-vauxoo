@@ -33,8 +33,7 @@ class ResPartner(models.Model):
 
     @api.model
     def _get_location_options(self):
-        """
-        @return a list of tuples with the selection field options.
+        """@return a list of tuples with the selection field options.
         """
         return [('undefine', _('Undefine')),
                 ('international', _('International')),
@@ -42,24 +41,31 @@ class ResPartner(models.Model):
 
     @api.depends('country_id')
     def _get_partner_scope(self):
+        """@return dictionary {res.partner.id: selecction field value}
         """
-        @return dictionary {res.partner.id: selecction field value}
-        """
-
+        company = self.env["res.company"]
         for rp_brw in self:
             rp_brw.international = 'undefine'
 
-        company_country = self.env['res.users'].browse(self._uid).\
-            company_id.country_id.id or False
-        if company_country:
-            for rp_brw in self:
-                rp_brw.international = rp_brw.country_id.id != company_country and \
+            # if the partner is part of a company
+            # then is not compare with country of
+            # company_id
+            company_id = company.search([("partner_id", "=", rp_brw.id)])
+
+            if company_id:
+                company_country = company_id.country_id.id or False
+            else:
+                company_country = rp_brw.\
+                    company_id.country_id.id or False
+
+            if company_country and rp_brw.country_id.id:
+                rp_brw.international = rp_brw.country_id.id != \
+                    company_country and \
                     'international' or 'national'
 
     @api.depends('international')
     def _get_warning_message(self):
-        """
-        @return dictionary {res.partner id: message value}
+        """@return dictionary {res.partner id: message value}
         """
         msg = _('Missing Configuration: international/national partner'
                 ' data is set using your configurate company country.\n'

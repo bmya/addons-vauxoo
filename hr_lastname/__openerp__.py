@@ -26,7 +26,7 @@
 
 {
     "name": "HR Employee Last Name",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "hr",
     "website": "http://www.vauxoo.com/",
@@ -43,7 +43,7 @@
     "data": [
         "view/hr_employee_view.xml",
     ],
-    'installable': True,
+    "installable": True,
     'application': False,
     'auto_install': False
 }

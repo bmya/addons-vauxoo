@@ -24,7 +24,7 @@
 ###############################################################################
 {
     "name": "POS Product Filter",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "Point Of Sale",
     "website": "http://www.vauxoo.com/",
@@ -47,6 +47,6 @@
     ],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

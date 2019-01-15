@@ -21,7 +21,7 @@
 ##############################################################################
 {
     "name": "Product extension to track sales and purchases from variants",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     'website': 'https://www.vauxoo.com',
     "license": "AGPL-3",
@@ -30,5 +30,5 @@
     "category": "Generic Modules/Inventory Control",
     "data": ['view/product_view.xml',
              'data/update_price_data.xml'],
-    "installable": True
+    "installable": False
 }

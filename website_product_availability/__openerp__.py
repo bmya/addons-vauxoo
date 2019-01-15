@@ -1,7 +1,7 @@
 # coding: utf-8
 {
     "name": "Website Product Availability",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "Website",
     "website": "http://www.vauxoo.com/",
@@ -9,7 +9,6 @@
     "depends": [
         "stock",
         "purchase",
-        "website_variants_extra",
         "website_sale",
     ],
     "demo": [
@@ -17,9 +16,10 @@
         "demo/purchase_order.xml",
     ],
     "data": [
-        "views/layout.xml",
-        "views/templates.xml",
-        "views/product_view.xml",
+        # "views/layout.xml",
+        # "views/templates.xml",
+        # "views/product_view.xml",
+        "security/stock_quant.xml",
         "security/ir.model.access.csv",
     ],
     "test": [],

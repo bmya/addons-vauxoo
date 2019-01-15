@@ -23,33 +23,31 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##########################################################################
 
-from openerp.osv import osv, fields
+from odoo import models, fields
 
 
-class MessagePostTestLine(osv.Model):
+class MessagePostTestNewApi(models.Model):
 
-    _name = 'message.post.test.line'
+    _name = 'message.post.test.new.api'
+    _inherit = ['mail.thread']
 
-    _columns = {
-        'name': fields.char('Name'),
-        'number': fields.integer('Number'),
-        'check': fields.boolean('Check'),
-        'test_id': fields.many2one('message.post.test', 'Test'),
-    }
+    name = fields.Char('Name')
+    user_id = fields.Many2one('res.users', 'User')
+    number = fields.Integer('Number')
+    line_ids = fields.One2many('message.post.test.line.new.api', 'test_id',
+                               'Lines')
+    user_ids = fields.Many2many('res.users', 'test_user_table_new_api',
+                                'test_id', 'user_id', 'Users')
+    select = fields.Selection([('1', 'Testing'), ('2', 'Changed')],
+                              'Selection')
+    check = fields.Boolean('Check')
 
 
-class MessagePostTest(osv.Model):
+class MessagePostTestLineNewApi(models.Model):
 
-    _name = 'message.post.test'
-    _inherit = ['message.post.show.all']
+    _name = 'message.post.test.line.new.api'
 
-    _columns = {
-        'name': fields.char('Name'),
-        'user_id': fields.many2one('res.users', 'User'),
-        'number': fields.integer('Number'),
-        'line_ids': fields.one2many('message.post.test.line', 'test_id',
-                                    'Lines'),
-        'user_ids': fields.many2many('res.users', 'test_user_table', 'test_id',
-                                     'user_id', 'Users'),
-        'check': fields.boolean('Check'),
-    }
+    name = fields.Char('Name')
+    number = fields.Integer('Number')
+    check = fields.Boolean('Check')
+    test_id = fields.Many2one('message.post.test.new.api', 'Test')

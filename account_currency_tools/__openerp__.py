@@ -21,7 +21,7 @@
 ###############################################################################
 {
     "name": "Account Currency Tools",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "Tools",
     "website": "http://www.vauxoo.com/",
@@ -41,7 +41,7 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
     "external_dependencies": {
         "python": [

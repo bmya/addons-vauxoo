@@ -24,21 +24,22 @@
 
 {
     'name': 'Account Refund Early Payment',
-    'version': '1.6',
+    'version': '8.0.0.1.6',
     'author': 'Vauxoo',
     'website': 'http://www.vauxoo.com/',
     'license': 'AGPL-3',
     'category': '',
-    'license': 'AGPL-3',
     'depends': ['account_accountant'],
     'data': [
         'data/data.xml',
         'view/refund_early_payment.xml',
     ],
-    'demo': [],
+    'demo': [
+        'demo/account_invoice_demo.xml',
+    ],
     'test': [],
     'qweb': [],
     'js': [],
     'css': [],
-    'installable': True,
+    "installable": False,
 }

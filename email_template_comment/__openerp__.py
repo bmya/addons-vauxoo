@@ -21,14 +21,13 @@
 ##########################################################################
 {
     "name": "Email template Comment",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "Addons Vauxoo",
     "website": "http://vauxoo.com",
     "license": "",
     "depends": [
         "mail",
-        "email_template"
     ],
     "demo": [],
     "data": [
@@ -38,6 +37,6 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

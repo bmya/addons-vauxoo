@@ -1,8 +1,10 @@
 # coding: utf-8
 
-"""
-Inherit the stock location model to add a code attribute and make the code
+"""Inherit the stock location model to add a code attribute and make the code
 searchable.
+
+New feature: Add the warehouse to location.
+e.g. [A012345] Stock(El Dorado)
 """
 
 ###########################################################################
@@ -30,77 +32,54 @@ searchable.
 #
 ##############################################################################
 
-from openerp.osv import osv
 import re
 
+from openerp import api, models
 
-class StockLocation(osv.Model):
 
-    """
-    Inherit the stock location model to add a code attribute and make the code
+class StockLocation(models.Model):
+
+    """Inherit the stock location model to add a code attribute and make the code
     searchable.
     """
 
     _inherit = 'stock.location'
 
-    def name_search(self, cr, user, name='', args=None,
-                    operator='ilike', context=None, limit=100):
-        args = args or []
+    # barcode is between [] e.g. "[1234] location1"
+    barcode_re = re.compile(r'^\[(?P<barcode>.*?)\]')
+    warehouse_re = re.compile(r' \((?P<wh>.*?)\)$')
+
+    @api.model
+    def name_search(self, name, args=None, operator='ilike', limit=100):
+        """Search by barcode or the default way"""
+        if args is None:
+            args = []
+        recs = self.browse()
         if name:
-            ids = self.search(
-                cr, user, [('loc_barcode', '=', name)] + args, limit=limit,
-                context=context)
-            if not ids:
-                ids = set()
-                ids.update(self.search(cr, user, args + [(
-                    'loc_barcode', operator, name)], limit=limit, context=context))
-                if not limit or len(ids) < limit:
-                    # we may underrun the limit because of dupes in the
-                    # results, that's fine
-                    ids.update(self.search(
-                        cr, user, args + [('name', operator, name)],
-                        limit=(limit and (limit - len(ids)) or False),
-                        context=context))
-                ids = list(ids)
+            re_search = self.barcode_re.search(name)
+            barcode = re_search.group('barcode') if re_search else name
+            recs = self.search([('loc_barcode', '=', barcode)] + args,
+                               limit=limit)
+            # TODO: Search by warehouse too with self.warehouse_re
+        res = recs.name_get() or super(StockLocation, self).name_search(
+            name, args=args, operator=operator, limit=limit)
+        return res
 
-            if not ids:
-                ptrn = re.compile(r'(\[(.*?)\])')
-                res = ptrn.search(name)
-                if res:
-                    ids = self.search(
-                        cr, user, [('loc_barcode', '=', res.group(2))] + args,
-                        limit=limit, context=context)
-        else:
-            ids = self.search(cr, user, args, limit=limit, context=context)
-        result = self.name_get(cr, user, ids, context=context)
-        return result
-
-    def _name_get(self, data_dict, context=None):
+    @api.model
+    def _name_get(self, location):
+        """Implements the stock location code in a new feauture, where if the
+        location has a reference to a warehouse, the name in a m2o search
+        concatenates the code and warehouse to a location if they exist.
+        Visually, it's better to know which owns the warehouse location.
         """
-        @return dictionary
-        """
-        context = context or {}
-        name = data_dict.get('name', '')
-        loc_barcode = data_dict.get('loc_barcode', False)
-        if loc_barcode:
-            name = '[%s] %s' % (loc_barcode, name)
-        return (data_dict['id'], name)
-
-    def name_get(self, cr, user, ids, context=None):
-        """
-        overwrite openerp method like the one for product.product model in the
-        product module.
-        """
-        context = context or {}
-        ids = isinstance(ids, (int, long)) and [ids] or ids
-        result = []
-        if not len(ids):
-            return result
-        for location in self.browse(cr, user, ids, context=context):
-            mydict = {
-                'id': location.id,
-                'name': location.name,
-                'loc_barcode': location.loc_barcode,
-            }
-            result.append(self._name_get(mydict))
-        return result
+        barcode = "[%(barcode)s]" % {'barcode': location.loc_barcode} \
+            if location.loc_barcode else ''
+        # TODO: Add fields.function to get warehouse. get_warehouse is too slow
+        # TODO: Add a parameters for a location path name or a wh_name
+        warehouse = self.env['stock.warehouse'].browse(
+            self.get_warehouse(location))
+        wh_name = "(%(warehouse)s)" % {'warehouse': warehouse.name} \
+            if warehouse else ''
+        items = [barcode.strip(), location.name.strip(), wh_name.strip()]
+        new_name = ' '.join(item for item in items if item)
+        return new_name

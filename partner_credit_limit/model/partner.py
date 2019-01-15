@@ -1,15 +1,8 @@
-# -*- coding: utf-8 -*-
-############################################################################
-#    Module Writen For Odoo, Open Source Management Solution
-#
-#    Copyright (c) 2011 Vauxoo - http://www.vauxoo.com
-#    All Rights Reserved.
-#    info Vauxoo (info@vauxoo.com)
-#    coded by: hugo@vauxoo.com
-#    planned by: Nhomar Hernandez <nhomar@vauxoo.com>
-############################################################################
-from openerp import models, fields, api
+# coding: utf-8
+# Copyright 2016 Vauxoo (https://www.vauxoo.com) <info@vauxoo.com>
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 from datetime import timedelta
+from odoo import models, fields, api
 
 
 class ResPartner(models.Model):
@@ -51,11 +44,7 @@ class ResPartner(models.Model):
                 new_amount, company.currency_id)
 
             new_credit = partner.credit + new_amount_currency
-
-            if new_credit > partner.credit_limit:
-                partner.credit_overloaded = True
-            else:
-                partner.credit_overloaded = False
+            partner.credit_overloaded = new_credit > partner.credit_limit
 
     @api.multi
     def _get_overdue_credit(self):
@@ -63,12 +52,14 @@ class ResPartner(models.Model):
             moveline_obj = self.env['account.move.line']
             movelines = moveline_obj.search(
                 [('partner_id', '=', partner.id),
-                 ('account_id.type', '=', 'receivable'),
-                 ('state', '!=', 'draft'), ('reconcile_id', '=', False)])
+                 ('account_id.internal_type', '=', 'receivable'),
+                 ('move_id.state', '!=', 'draft'),
+                 ('reconciled', '=', False)])
             # credit = 0.0
             debit_maturity, credit_maturity = 0.0, 0.0
             for line in movelines:
-                if line.date_maturity and line.partner_id.grace_payment_days:
+                limit_day = line.date_maturity
+                if line.partner_id.grace_payment_days:
                     maturity = fields.Datetime.from_string(
                         line.date_maturity)
                     grace_payment_days = timedelta(
@@ -76,10 +67,6 @@ class ResPartner(models.Model):
                     limit_day = maturity + grace_payment_days
                     limit_day = limit_day.strftime("%Y-%m-%d")
 
-                elif line.date_maturity:
-                    limit_day = line.date_maturity
-                else:
-                    limit_day = fields.Date.today()
                 if limit_day <= fields.Date.today():
                     # credit and debit maturity sums all aml
                     # with late payments
@@ -87,16 +74,10 @@ class ResPartner(models.Model):
                 credit_maturity += line.credit
                 # credit += line.credit
             balance_maturity = debit_maturity - credit_maturity
-
-            if balance_maturity > 0.0:
-                partner.overdue_credit = True
-            else:
-                partner.overdue_credit = False
+            partner.overdue_credit = balance_maturity > 0.0
 
     @api.multi
     def get_allowed_sale(self):
         for partner in self:
-            if not partner.credit_overloaded and not partner.overdue_credit:
-                partner.allowed_sale = True
-            else:
-                partner.allowed_sale = False
+            partner.allowed_sale = not partner.credit_overloaded and \
+                not partner.overdue_credit

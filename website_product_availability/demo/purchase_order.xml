@@ -3,7 +3,7 @@
     <data noupdate="0">
         <record id="purchase_order_stock" model="purchase.order">
             <field name="partner_id" ref='base.res_partner_1'/>
-            <field name="pricelist_id" ref='purchase.list0'/>
+            <field name="pricelist_id" ref='product.list0'/>
             <field name="currency_id" ref='base.EUR'/>
             <field name="picking_type_id" ref='stock.chi_picking_type_in'/>
             <field name="date_order" eval="time.strftime('%Y-%m-%d %H:%M:%S')"/>
@@ -18,6 +18,54 @@
             <field name="price_unit">800</field>
             <field name="order_id" ref='purchase_order_stock'/>
             <field name="date_planned" eval="time.strftime('%Y-%m-%d')"/>
+            <field name='product_uom' ref='product.product_uom_unit'/>
         </record>
+
+        <!-- Purchase Order -->
+
+        <record id="purchase_order_availability_1" model="purchase.order">
+            <field name="name">Order Purchase availability 1</field>
+            <field name="date_order">2015-05-08 18:17:05</field>
+            <field name="invoice_method">order</field>
+            <field name="partner_id" ref="base.res_partner_18"/>
+            <field name="currency_id" ref="base.EUR"/>
+            <field name='product_uom' ref='product.product_uom_unit'/>
+            <field name="pricelist_id" ref="product.list0"/>
+            <field name="location_id" ref="stock.stock_location_company"/>
+        </record>
+
+        <!-- Purchase Order Lines-->
+
+        <record id="purchase_order_availability_1_line_1" model="purchase.order.line">
+            <field name='product_uom' ref='product.product_uom_unit'/>
+            <field name="name">Order Purchase availability 1 Line 1</field>
+            <field name="order_id" ref="purchase_order_availability_1"/>
+            <field name="product_id" ref="product.product_product_11b"/>
+            <field name="product_qty">2</field>
+            <field name="price_unit">1299.0</field>
+            <field name="date_planned">2015-05-08</field>
+        </record>
+
+        <!-- Confirm Purchase Order, (Invoice and Picking is created automatically) -->
+        <function model="purchase.order"
+            name="button_confirm" eval="[ref('purchase_order_availability_1')]"/>
+
+        <!--Transfer of Products in the Picking of Purchase Order -->
+
+
+        <!-- Lot of Products -->
+
+        <record id="lot_purchase_item_1" model="stock.production.lot">
+            <field name="name">IPOD001</field>
+            <field name="ref">IPOD001</field>
+            <field name="product_id" ref="product.product_product_11b"/>
+        </record>
+
+         <record id="lot_purchase_item_2" model="stock.production.lot">
+            <field name="name">IPOD002</field>
+            <field name="ref">IPOD002</field>
+            <field name="product_id" ref="product.product_product_11b"/>
+        </record>
+        <!-- Transfer Detail Items of Product Transfer -->
     </data>
 </openerp>

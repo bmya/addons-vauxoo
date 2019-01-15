@@ -4,7 +4,7 @@
     'category': 'Website',
     'summary': 'Show your trusted service centers',
     'website': 'https://www.vauxoo.com/',
-    'version': '1.6',
+    'version': '8.0.0.1.6',
     'author': 'Vauxoo',
     'license': 'AGPL-3',
     'depends': [
@@ -21,6 +21,6 @@
     'qweb': [
 
     ],
-    'installable': True,
+    "installable": True,
     'application': True,
 }

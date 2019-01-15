@@ -1,39 +1,30 @@
-# -*- coding: utf-8 -*-
-############################################################################
-#    Module Writen For Odoo, Open Source Management Solution
-#
-#    Copyright (c) 2011 Vauxoo - http://www.vauxoo.com
-#    All Rights Reserved.
-#    info Vauxoo (info@vauxoo.com)
-#    coded by: hugo@vauxoo.com
-#    planned by: Nhomar Hernandez <nhomar@vauxoo.com>
-############################################################################
+# coding: utf-8
+# Copyright 2016 Vauxoo (https://www.vauxoo.com) <info@vauxoo.com>
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 
-from openerp.tests.common import TransactionCase
-from openerp import exceptions
 from datetime import datetime, timedelta
+from odoo import exceptions
+from . import common
 
 
-class TestCreditLimits(TransactionCase):
-    """
-        This test Validate credit limit, late pyaments and credit
+class TestCreditLimits(common.TestCommon):
+    """This test Validate credit limit, late pyaments and credit
         overloaded.
     """
     def setUp(self):
         super(TestCreditLimits, self).setUp()
-        self.account_invoice = self.env['account.invoice']
-        self.account_invoice_line = self.env['account.invoice.line']
+        self._load('account', 'test', 'account_minimal_test.xml')
         self.payment_term_credit = self.env.ref(
             'account.account_payment_term_advance')
 
         self.partner_china = self.env.ref("base.res_partner_3")
         self.journal_id = self.env.ref("account.bank_journal")
         self.account_id = self.env.ref("account.a_recv")
+        self.account_sale_id = self.env.ref("account.a_sale")
         self.product_id = self.env.ref("product.product_product_6")
 
     def test_credit_limit_overloaded(self):
-        """
-            This test validate the partner has credit overloaded
+        """This test validate the partner has credit overloaded
             and can not validate the invoice
 
         """
@@ -45,10 +36,11 @@ class TestCreditLimits(TransactionCase):
         invoice_id = self.account_invoice.create(
             {'partner_id': self.partner_china.id,
              'account_id': self.account_id.id,
-             'payment_term': self.payment_term_credit.id,
+             'payment_term_id': self.payment_term_credit.id,
              'journal_id': self.journal_id.id, })
         self.account_invoice_line.create(
             {'product_id': self.product_id.id,
+             'account_id': self.account_sale_id.id,
              'quantity': 6,
              'price_unit': 100,
              'invoice_id': invoice_id.id,
@@ -59,11 +51,10 @@ class TestCreditLimits(TransactionCase):
         # credit_limit = 500
         # amount_total = 600
         with self.assertRaises(exceptions.Warning):
-            invoice_id.signal_workflow('invoice_open')
+            invoice_id.action_invoice_open()
 
     def test_partner_with_late_payments(self):
-        """
-            This test validate that the partner has not late payments
+        """This test validate that the partner has not late payments
 
         """
 
@@ -78,16 +69,17 @@ class TestCreditLimits(TransactionCase):
              'account_id': self.account_id.id,
              'date_invoice': (
                  datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d"),
-             'payment_term': self.payment_term_credit.id,
+             'payment_term_id': self.payment_term_credit.id,
              'journal_id': self.journal_id.id, })
         self.account_invoice_line.create(
             {'product_id': self.product_id.id,
+             'account_id': self.account_sale_id.id,
              'quantity': 4,
              'price_unit': 100,
              'invoice_id': invoice_id.id,
              'name': 'product that cost 100', })
         # Validate the invoice.
-        invoice_id.signal_workflow('invoice_open')
+        invoice_id.action_invoice_open()
 
         # At this moment there are late paymets since the invoice
         # was validate one day before
@@ -97,10 +89,11 @@ class TestCreditLimits(TransactionCase):
         invoice_id2 = self.account_invoice.create(
             {'partner_id': self.partner_china.id,
              'account_id': self.account_id.id,
-             'payment_term': self.payment_term_credit.id,
+             'payment_term_id': self.payment_term_credit.id,
              'journal_id': self.journal_id.id, })
         self.account_invoice_line.create(
             {'product_id': self.product_id.id,
+             'account_id': self.account_sale_id.id,
              'quantity': 2,
              'price_unit': 100,
              'invoice_id': invoice_id2.id,
@@ -108,4 +101,96 @@ class TestCreditLimits(TransactionCase):
         # Validate the invoice, should fail, couse there are late payments
         # since the invoice 1 was validate with curent day minus 2 days
         with self.assertRaises(exceptions.Warning):
-            invoice_id2.signal_workflow('invoice_open')
+            invoice_id2.action_invoice_open()
+
+    def test_credit_limit_proforma_overloaded(self):
+        """This test validate the partner has credit overloaded
+            and can not validate the invoice in state pro-forma
+        """
+        # CASE WHERE PARTNER HAVE CREDIT OVERLOADED
+        # set credit limit in 500
+        self.partner_china.credit_limit = 500.00
+
+        # invoice with amount total of 600.00
+        invoice_id = self.account_invoice.create(
+            {'partner_id': self.partner_china.id,
+             'account_id': self.account_id.id,
+             'payment_term_id': self.payment_term_credit.id,
+             'journal_id': self.journal_id.id, })
+        self.account_invoice_line.create(
+            {'product_id': self.product_id.id,
+             'account_id': self.account_sale_id.id,
+             'quantity': 6,
+             'price_unit': 100,
+             'invoice_id': invoice_id.id,
+             'name': 'product that cost 100', })
+
+        # should not validate the invoice
+        # credit limit exceded
+        # credit_limit = 500
+        # amount_total = 600
+        with self.assertRaises(exceptions.Warning):
+            invoice_id.action_invoice_proforma2()
+
+        # CASE WHERE PARTNER HAVE CREDIT
+        # set credit limit in 700
+        self.partner_china.credit_limit = 700.00
+        invoice_id.action_invoice_proforma2()
+        self.assertEqual(invoice_id.state, 'proforma2',
+                         'State of the invoice should be proforma2')
+
+    def test_overdue_credit(self):
+        """Test for field overdue credit
+        """
+        move = self.env['account.move']
+        self.partner_china.grace_payment_days = 15
+        self.assertEqual(self.partner_china.grace_payment_days,
+                         15.0,
+                         'Field days grace payment should be 15')
+
+        # Create journal entries for test with date maturity
+        date = datetime.now().strftime("%Y-%m-%d")
+        move_id = move.create({
+            'journal_id': self.journal_id.id,
+            'date': date,
+            'ref': 'Move Test',
+            'line_ids': [(0, 0, {
+                'account_id': self.account_id.id,
+                'partner_id': self.partner_china.id,
+                'name': 'Line Test 1',
+                'debit': 100.0,
+                'date_maturity': date,
+            }), (0, 0, {
+                'account_id': self.account_sale_id.id,
+                'partner_id': self.partner_china.id,
+                'name': 'Line Test 1',
+                'credit': 100.0,
+                'date_maturity': date,
+            })]
+        })
+        move_id.post()
+        self.assertEqual(move_id.state, 'posted',
+                         'State of the journal entries should be posted')
+
+        # Create journal entries for test without date maturity
+        move2_id = move.create({
+            'journal_id': self.journal_id.id,
+            'date': date,
+            'ref': 'Move Test 2',
+            'line_ids': [(0, 0, {
+                'account_id': self.account_id.id,
+                'partner_id': self.partner_china.id,
+                'name': 'Line Test 2',
+                'debit': 100.0,
+            }), (0, 0, {
+                'account_id': self.account_sale_id.id,
+                'partner_id': self.partner_china.id,
+                'name': 'Line Test 2',
+                'credit': 100.0,
+            })]
+        })
+        move2_id.post()
+        self.assertEqual(move2_id.state, 'posted',
+                         'State of the journal entries should be posted')
+        self.assertFalse(self.partner_china.overdue_credit,
+                         'Overdue Credit should be False')

@@ -23,7 +23,7 @@
 ###############################################################################
 {
     "name": "Stock Sale Order Line",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "sale",
     "website": "http://www.vauxoo.com/",
@@ -39,6 +39,6 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

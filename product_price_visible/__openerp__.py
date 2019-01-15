@@ -27,13 +27,13 @@
 #~ "security/ir.model.access.csv",
 {
     "name": "Product Price Visible",
-    "version": "1.6",
+    "version": "8.0.0.1.6",
     "author": "Vauxoo",
     "category": "Product",
     "website": "www.vauxoo.com",
     "license": "AGPL-3",
     "depends": [
-        "stock"
+        "stock_account",
     ],
     "demo": [],
     "data": [
@@ -44,6 +44,6 @@
     "js": [],
     "css": [],
     "qweb": [],
-    "installable": True,
+    "installable": False,
     "auto_install": False,
 }

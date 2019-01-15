@@ -23,25 +23,22 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-'''
-File to add functionalitity in account.invoice.line to get the amount without
+"""File to add functionalitity in account.invoice.line to get the amount without
 discount and the value of the discount
-'''
+"""
 from openerp.osv import osv, fields
 
 
 class AccountInvoiceLine(osv.osv):
 
-    '''
-    Inherit from account.invoice.line to get by line the amount without
+    """Inherit from account.invoice.line to get by line the amount without
     discount and the amount of this
-    '''
+    """
     _inherit = 'account.invoice.line'
 
     def _get_subtotal_without_discount(self, cr, uid, ids, args, field_name,
                                        context=None):
-        '''
-        Method to get the subtotal of the amount without discount
+        """Method to get the subtotal of the amount without discount
         @param self: The object pointer.
         @param cr: A database cursor
         @param uid: ID of the user currently logged in
@@ -50,7 +47,7 @@ class AccountInvoiceLine(osv.osv):
         @param arg: Extra arguments
         @param context: A standard dictionary
         @return : Dict with values
-        '''
+        """
         context = context or {}
         res = {}
         for line in self.browse(cr, uid, ids, context=context):
@@ -58,8 +55,7 @@ class AccountInvoiceLine(osv.osv):
         return res
 
     def _get_discount(self, cr, uid, ids, args, field_name, context=None):
-        '''
-        Method to get the amount of discount, is used subtraction by rounding
+        """Method to get the amount of discount, is used subtraction by rounding
         @param self: The object pointer.
         @param cr: A database cursor
         @param uid: ID of the user currently logged in
@@ -68,7 +64,7 @@ class AccountInvoiceLine(osv.osv):
         @param arg: Extra arguments
         @param context: A standard dictionary
         @return : Dict with values
-        '''
+        """
         context = context or {}
         res = {}
         for line in self.browse(cr, uid, ids, context=context):
@@ -94,16 +90,14 @@ class AccountInvoiceLine(osv.osv):
 
 class AccountInvoice(osv.osv):
 
-    '''
-    Inherit from account.invoice to get the amount total without discount and
+    """Inherit from account.invoice to get the amount total without discount and
     the amount total of this, of all invoice lines.
-    '''
+    """
     _inherit = 'account.invoice'
 
     def _get_subtotal_without_discount(self, cr, uid, ids, args, field_name,
                                        context=None):
-        '''
-        Method to get the subtotal of the amount without discount of the sum of
+        """Method to get the subtotal of the amount without discount of the sum of
         invoice lines.
         @param self: The object pointer.
         @param cr: A database cursor
@@ -113,19 +107,18 @@ class AccountInvoice(osv.osv):
         @param arg: Extra arguments
         @param context: A standard dictionary
         @return : Dict with values
-        '''
+        """
         context = context or {}
         total = 0.0
         res = {}
         for inv in self.browse(cr, uid, ids, context=context):
-            for line in inv.invoice_line:
+            for line in inv.invoice_line_ids:
                 total += line.subtotal_wo_discount
             res[inv.id] = total
         return res
 
     def _get_discount(self, cr, uid, ids, args, field_name, context=None):
-        '''
-        Method to get the amount total of discount in the invoice lines.
+        """Method to get the amount total of discount in the invoice lines.
         @param self: The object pointer.
         @param cr: A database cursor
         @param uid: ID of the user currently logged in
@@ -134,12 +127,12 @@ class AccountInvoice(osv.osv):
         @param arg: Extra arguments
         @param context: A standard dictionary
         @return : Dict with values
-        '''
+        """
         context = context or {}
         total = 0.0
         res = {}
         for inv in self.browse(cr, uid, ids, context=context):
-            for line in inv.invoice_line:
+            for line in inv.invoice_line_ids:
                 total += line.discount_amount
             res[inv.id] = total
         return res
